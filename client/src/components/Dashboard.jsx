@@ -1,5 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
+import axios from 'axios';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -17,7 +18,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import ListIcon from '@material-ui/icons/List';
-import PdfReader from './PdfReader.jsx'
+import PdfReader from './PdfReader.jsx';
 
 import Box from '@material-ui/core/Box';
 
@@ -87,6 +88,8 @@ export default function Dashboard() {
   const classes = useStyles();
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
+  const [fileSubmitted, setFileSubmitted] = React.useState(false);
+  const [file, setFile] = React.useState(null);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -95,6 +98,22 @@ export default function Dashboard() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
+
+  const onFormSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('myfile', file);
+    const config = {
+        headers: {
+            'content-type': 'multipart/form-data'
+        }
+    };
+    axios.get("http://localhost:8000/upload",formData,config)
+        .then((response) => {
+            setFileSubmitted(true);
+        }).catch((error) => {
+    });
+}
 
   return (
     <div className={classes.root}>
@@ -146,7 +165,7 @@ export default function Dashboard() {
             <ListItemIcon>
               <CloudUploadIcon />
               </ListItemIcon>
-            <ListItemText primary="Upload New Form" />
+            <ListItemText primary="Upload New Form" ><input type='file'/></ListItemText>
           </ListItem>
         </List>
       </Drawer>
@@ -157,7 +176,16 @@ export default function Dashboard() {
           })}
         >
           <div className={classes.drawerHeader} />
-          <PdfReader/>
+          { fileSubmitted 
+          ? <PdfReader/> 
+          : <div>
+              <form onSubmit={onFormSubmit}>
+                <h1>File Upload</h1>
+                <input type="file" className="custom-file-input" name="myFile" onChange= {(e) => setFile(e.target.files)} />
+                <button className="upload-button" type="submit">Upload to DB</button>
+              </form>
+            </div>
+          }
         </main>
       </Box>
     </div>
